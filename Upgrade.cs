@@ -42,6 +42,9 @@ namespace BrickBreaker
             double probability = Rnd.NextDouble();
             if (probability > 0.1)
                 return;
+
+            Statistics.UpgradesCollected++;
+
             if (probability > 0.075)
                 Game.UpgradeQueue.Enqueue(new AddThreeBalls(currentTime, paddle, balls, gameCanvas));
             if (probability > 0.05)

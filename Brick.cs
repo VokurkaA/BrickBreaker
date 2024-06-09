@@ -62,6 +62,7 @@ namespace BrickBreaker
             if (Hp <= 0)
             {
                 //Upgrade.New();
+                Statistics.BrickDestroyed++;
                 return true;
             }
             return false;

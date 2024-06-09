@@ -28,7 +28,8 @@ namespace BrickBreaker
         private Canvas GameCanvas { get; }
         private Stopwatch ElapsedTime { get; }
         private double LastTime { get; set; }
-
+        private Arrow arrow { get; set; }
+        private TextBlock TextElement { get; set; }
 
         public Game(Canvas gameCanvas, Brick[,] brickLayout)
         {
@@ -37,14 +38,23 @@ namespace BrickBreaker
             LastTime = 0;
             UiDispatcher = Dispatcher.CurrentDispatcher;
             PlayState = GameState.Playing;
+            arrow = new();
 
             GamePaddle = new();
             Canvas.SetLeft(GamePaddle.rectangle, GamePaddle.Position.X);
             Canvas.SetTop(GamePaddle.rectangle, GamePaddle.Position.Y);
             gameCanvas.Children.Add(GamePaddle.rectangle);
 
-            Balls = [new(new Vector2D(gameCanvas.Width / 2, gameCanvas.Height / 4 * 3), new Vector2D(-1, 1))];
-            GameCanvas.Children.Add(Balls[0].ellipse);
+            TextElement = new TextBlock
+            {
+                Text = "Move to begin.",
+                FontSize = 20,
+                FontWeight = FontWeights.Bold,
+                Foreground = new SolidColorBrush(Colors.White),
+                Margin = new Thickness(GameCanvas.Width / 4, GameCanvas.Height / 4, 0, 0)
+            };
+
+            Balls = [];
 
             Bricks = brickLayout;
             EdgeBricks = [];
@@ -67,38 +77,69 @@ namespace BrickBreaker
 
         public void Start()
         {
+            Statistics.GamesPlayed++;
             ElapsedTime.Start();
             Task.Run(() => ListenForUserInput());
             Task.Run(() =>
             {
+                UiDispatcher.Invoke(() =>
+                {
+                    Canvas.SetTop(arrow.arrow, GameCanvas.Height / 2);
+                    Canvas.SetLeft(arrow.arrow, GameCanvas.Width / 2);
+                    GameCanvas.Children.Add(arrow.arrow);
+                    GameCanvas.Children.Add(TextElement);
+                });
+                bool keyPressed = false;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Application.Current.MainWindow.KeyDown += (sender, e) =>
+                    {
+                        if (e.Key == Key.Left || e.Key == Key.Right)
+                            keyPressed = true;
+                    };
+                });
+
+                while (!keyPressed)
+                {
+                    double deltaTime = (ElapsedTime.Elapsed.TotalSeconds - LastTime);
+                    LastTime = ElapsedTime.Elapsed.TotalSeconds;
+                    arrow.Rotate(Math.Min(deltaTime, 0.05));
+                    Task.Delay(5).Wait();
+                }
+
+                UiDispatcher.Invoke(() =>
+                {
+                    GameCanvas.Children.Remove(TextElement);
+                    GameCanvas.Children.Remove(arrow.arrow);
+                    Balls.Add(new Ball(new Vector2D(GameCanvas.Width / 2, GameCanvas.Height / 2), Vector2D.FromAngle(arrow.Angle + 90)));
+                    GameCanvas.Children.Add(Balls[0].ellipse);
+                });
                 while (PlayState == GameState.Playing)
                 {
                     Step();
                     Task.Delay(5).Wait();
                 }
+                Statistics.TimePlayed += ElapsedTime.Elapsed.TotalSeconds;
                 if (PlayState == GameState.Lost)
                 {
+                    Statistics.GamesLost++;
                     UiDispatcher.Invoke(() =>
                     {
-                        GameCanvas.Children.Add(new TextBlock
-                        {
-                            Text = "game over",
-                            Foreground = new SolidColorBrush(Colors.White)
-                        });
+                        TextElement.Text = "Game over.";
+                        GameCanvas.Children.Add(TextElement);
                     });
                 }
                 else if (PlayState == GameState.Won)
                 {
+                    Statistics.GamesWon++;
                     UpgradeQueue.Clear();
                     UiDispatcher.Invoke(() =>
                     {
-                        GameCanvas.Children.Add(new TextBlock
-                        {
-                            Text = "you won",
-                            Foreground = new SolidColorBrush(Colors.White)
-                        });
+                        TextElement.Text = "You won";
+                        GameCanvas.Children.Add(TextElement);
                     });
                 }
+                Statistics.Save();
             });
         }
         private void ListenForUserInput()
@@ -142,8 +183,7 @@ namespace BrickBreaker
             List<Brick> removedBricks = new List<Brick>();
 
             double deltaTime = (ElapsedTime.Elapsed.TotalSeconds - LastTime);
-
-            LastTime = ElapsedTime.Elapsed.TotalMilliseconds;
+            LastTime = ElapsedTime.Elapsed.TotalSeconds;
 
             double xPaddle = GamePaddle.Position.X;
             double dxPaddle = GamePaddle.Move(MoveDirection);

@@ -81,6 +81,16 @@ namespace BrickBreaker
             x = x * (1.5 - xhalf * x * x);
             return x;
         }
+        public static Vector2D FromAngle(double angle)
+        {
+            angle %= 360;
+            double angleInRadians = angle * Math.PI / 180.0;
+
+            double x = Math.Cos(angleInRadians);
+            double y = Math.Sin(angleInRadians);
+
+            return new Vector2D(x, y);
+        }
         public static Vector2D operator +(Vector2D v1, Vector2D v2)
         {
             return new Vector2D(v1.X + v2.X, v1.Y + v2.Y);

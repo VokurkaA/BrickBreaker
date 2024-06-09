@@ -10,6 +10,14 @@
       Height="450" Width="800">
 
     <Grid Height="450" Width="800">
-        <Button Content="Start Game" HorizontalAlignment="Center" VerticalAlignment="Center" Width="100" Click="StartGame_Click"/>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <Button x:Name="LevelSelector" Content="Select Level" Click="LevelSelector_Click" Grid.Column="0"/>
+        <Button x:Name="StartGame" Content="Start Game" Click="StartGame_Click" Grid.Column="1"/>
+        <Button x:Name="Statistics" Content="Statistics" Click="Statistics_Click" Grid.Column="2"/>
     </Grid>
 </Page>

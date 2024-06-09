@@ -12,6 +12,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using System.Xml.XPath;
 
 namespace BrickBreaker
 {
@@ -27,6 +28,16 @@ namespace BrickBreaker
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
             NavigationService.Navigate(new GamePage());
+        }
+
+        private void Statistics_Click(object sender, RoutedEventArgs e)
+        {
+            NavigationService.Navigate(new StatisticsPage());
+        }
+
+        private void LevelSelector_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
