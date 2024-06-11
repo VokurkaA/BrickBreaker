@@ -23,5 +23,9 @@ namespace BrickBreaker
             LevelLoader.Load();
             MainFrame.Navigate(new StartPage());
         }
+        public void GoBack()
+        {
+            MainFrame.GoBack();
+        }
     }
 }

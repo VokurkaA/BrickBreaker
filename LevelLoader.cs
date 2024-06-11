@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,8 +12,20 @@ namespace BrickBreaker
     internal static class LevelLoader
     {
         private static string FilePath { get => "levelData.json"; }
-        public static List<Brick[,]> Levels { get; private set; } = new();
+        private static List<Brick[,]> Levels { get; set; } = [];
         public static int SelectedLevel { get; set; } = 0;
+        public static int LevelCount { get => Levels.Count; }
+        public static Brick[,] GetLevel()
+        {
+            Brick[,] lvlCopy = new Brick[Levels[SelectedLevel].GetLength(0), Levels[SelectedLevel].GetLength(1)];
+
+            for (int i = 0; i < Levels[SelectedLevel].GetLength(0); i++)
+            {
+                for (int j = 0; j < Levels[SelectedLevel].GetLength(1); j++)
+                    lvlCopy[i, j] = Levels[SelectedLevel][i, j];
+            }
+            return lvlCopy;
+        }
         public static void Load()
         {
             try
@@ -27,20 +40,15 @@ namespace BrickBreaker
                             Brick[,] bricks = new Brick[10, 20];
                             for (int i = 0; i < 20; i++)
                             {
-                                int j = 0;
-                                foreach (int[] column in level)
+                                for (int j = 0; j < 10; j++)
                                 {
-                                    if (j >= column.Length)
-                                        break;
-
-                                    int item = column[j];
+                                    int item = level[j][i];
                                     if (item == 0)
                                         bricks[j, i] = null;
                                     else if (item == 10)
                                         bricks[j, i] = new UndestroyableBrick(new Vector2D(i, j));
                                     else
                                         bricks[j, i] = new Brick(item, new Vector2D(i, j));
-                                    j++;
                                 }
                             }
                             Levels.Add(bricks);

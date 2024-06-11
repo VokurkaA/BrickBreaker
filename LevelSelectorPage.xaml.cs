@@ -24,8 +24,9 @@ namespace BrickBreaker
             int col = 0;
             int row = 0;
 
-            for (int i = 0; i < LevelLoader.Levels.Count(); i++)
+            for (int i = 0; i < LevelLoader.LevelCount; i++)
             {
+                int levelIndex = i;
                 Button levelButton = new()
                 {
                     Height = height,
@@ -43,7 +44,7 @@ namespace BrickBreaker
 
                 levelButton.Click += (sender, e) =>
                 {
-                    LevelLoader.SelectedLevel = i -1;
+                    LevelLoader.SelectedLevel = levelIndex;
                     NavigationService?.GoBack();
                 };
 

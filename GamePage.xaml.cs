@@ -32,10 +32,11 @@ namespace BrickBreaker
         {
             CanvasWidth = canvas.Width;
             CanvasHeight = canvas.Height;
-            Brick[,] brickLayout = LevelLoader.Levels[LevelLoader.SelectedLevel];
+            //Brick[,] brickLayout = LevelLoader.Levels[LevelLoader.SelectedLevel];
 
-            Game game = new(canvas, brickLayout);
+            Game game = new(canvas, LevelLoader.GetLevel());
             game.Start();
+            NavigationService?.GoBack();
         }
     }
 }

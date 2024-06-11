@@ -10,6 +10,7 @@ using System.Windows.Controls;
 using System.Windows.Controls.Ribbon;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Windows.Threading;
 
@@ -48,7 +49,7 @@ namespace BrickBreaker
             TextElement = new TextBlock
             {
                 Text = "Move to begin.",
-                FontSize = 20,
+                FontSize = 30,
                 FontWeight = FontWeights.Bold,
                 Foreground = new SolidColorBrush(Colors.White),
                 Margin = new Thickness(GameCanvas.Width / 4, GameCanvas.Height / 4, 0, 0)
@@ -80,7 +81,7 @@ namespace BrickBreaker
             Statistics.GamesPlayed++;
             ElapsedTime.Start();
             Task.Run(() => ListenForUserInput());
-            Task.Run(() =>
+            Task.Run( () =>
             {
                 UiDispatcher.Invoke(() =>
                 {
@@ -140,6 +141,33 @@ namespace BrickBreaker
                     });
                 }
                 Statistics.Save();
+                Task.Delay(750).Wait();
+                UiDispatcher.Invoke(() =>
+                {
+                    GameCanvas.Children.Add(new TextBlock
+                    {
+                        Text = "Press any key to continue...",
+                        FontSize = 25,
+                        FontWeight = FontWeights.Bold,
+                        Foreground = new SolidColorBrush(Colors.White),
+                        Margin = new Thickness(GameCanvas.Width / 4, GameCanvas.Height / 3, 0, 0)
+                    });
+                });
+                keyPressed = false;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    Application.Current.MainWindow.KeyDown += (sender, e) =>
+                    {
+                        keyPressed = true;
+                    };
+                });
+                while (!keyPressed)
+                    Task.Delay(5).Wait();
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    GameCanvas.Children.Clear();
+                    ((MainWindow)Application.Current.MainWindow).GoBack();
+                });
             });
         }
         private void ListenForUserInput()
@@ -177,7 +205,7 @@ namespace BrickBreaker
                 Canvas.SetLeft(GamePaddle.rectangle, position);
             });
         }
-        private bool Step()
+        private void Step()
         {
             List<int> removedBallsIndex = new List<int>();
             List<Brick> removedBricks = new List<Brick>();
@@ -236,14 +264,17 @@ namespace BrickBreaker
                 }
             }
             if (Balls.Count == 0)
+            {
                 PlayState = GameState.Lost;
+                return;
+            }
             foreach (Brick brick in Bricks)
             {
-                if (brick != null)
-                    return true;
+                if (brick != null && brick is not UndestroyableBrick)
+                    return;
             }
             PlayState = GameState.Won;
-            return true;
+            return;
         }
     }
 }   

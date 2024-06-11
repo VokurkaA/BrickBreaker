@@ -13,7 +13,8 @@ namespace BrickBreaker
 
         private void LoadStatistics()
         {
-            TimePlayedTextBlock.Text = ((int)Statistics.TimePlayed).ToString() + " s";
+            TimeSpan playTime = TimeSpan.FromSeconds(Statistics.TimePlayed);
+            TimePlayedTextBlock.Text = $"{playTime.Hours}h {playTime.Minutes}m {playTime.Seconds}s"; 
             BrickDestroyedTextBlock.Text = Statistics.BrickDestroyed.ToString();
             GamesPlayedTextBlock.Text = Statistics.GamesPlayed.ToString();
             GamesWonTextBlock.Text = Statistics.GamesWon.ToString();
