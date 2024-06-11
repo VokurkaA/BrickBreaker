@@ -32,13 +32,7 @@ namespace BrickBreaker
         {
             CanvasWidth = canvas.Width;
             CanvasHeight = canvas.Height;
-            Brick[,] brickLayout = new Brick[10, 20];
-
-            for (int i = 0; i < brickLayout.GetLength(0); i++)
-            {
-                for (int j = 0; j < brickLayout.GetLength(1); j++)
-                    brickLayout[i, j] = new Brick(Brushes.Blue, new Vector2D(j, i));
-            }
+            Brick[,] brickLayout = LevelLoader.Levels[LevelLoader.SelectedLevel];
 
             Game game = new(canvas, brickLayout);
             game.Start();

@@ -20,6 +20,7 @@ namespace BrickBreaker
         {
             InitializeComponent();
             Statistics.Load();
+            LevelLoader.Load();
             MainFrame.Navigate(new StartPage());
         }
     }

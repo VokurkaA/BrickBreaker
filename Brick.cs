@@ -12,6 +12,7 @@ namespace BrickBreaker
 {
     internal class Brick
     {
+        private readonly string[] colorStops = ["#000000", "#00FF00", "#20DF00", "#40BF00", "#609F00", "#808000", "#9F6000", "#BF4000", "#DF2000", "#FF0000"];
         public Rectangle rectangle { get; }
         private int Hp { get; set; }
         public static int Height { get => 20; }
@@ -20,9 +21,10 @@ namespace BrickBreaker
         public double Top { get => position.Y * Height; }
         public double Left { get => position.X * Width; }
 
-        public Brick(Brush color, Vector2D position)
+        public Brick(int hp, Vector2D position)
         {
-            Hp = 1;
+            SolidColorBrush color = new BrushConverter().ConvertFrom(colorStops[hp]) as SolidColorBrush ?? Brushes.Red;
+            Hp = hp;
             this.position = position;
             rectangle = new Rectangle()
             {
@@ -71,7 +73,7 @@ namespace BrickBreaker
 
     internal class UndestroyableBrick : Brick
     {
-        public UndestroyableBrick(Vector2D position) : base(Brushes.DarkGray, position) { }
+        public UndestroyableBrick(Vector2D position) : base(0, position) { }
 
         public override bool Hit() => false;
     }

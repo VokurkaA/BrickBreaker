@@ -1,4 +1,4 @@
-﻿<Window x:Class="BrickBreaker.LevelSelectorPage"
+﻿<Page x:Class="BrickBreaker.LevelSelectorPage"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -7,6 +7,9 @@
         mc:Ignorable="d"
         Title="LevelSelectorPage" Height="450" Width="800">
     <Grid>
-        
+        <TextBlock Text="Level selector" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,20,0,0"/>
+        <Canvas x:Name="grid"></Canvas>
+        <Button Content="Back" Click="Button_Click" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="20"/>
+
     </Grid>
-</Window>
+</Page>

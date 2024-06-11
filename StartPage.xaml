@@ -17,7 +17,12 @@
         </Grid.ColumnDefinitions>
 
         <Button x:Name="LevelSelector" Content="Select Level" Click="LevelSelector_Click" Grid.Column="0"/>
-        <Button x:Name="StartGame" Content="Start Game" Click="StartGame_Click" Grid.Column="1"/>
+        <Button x:Name="StartGame" Click="StartGame_Click" Grid.Column="1">
+            <StackPanel>
+                <TextBlock Text="Start Game" Margin="0,0,0,50" />
+                <TextBlock x:Name="levelLabel" Text="Level X" HorizontalAlignment="Center" />
+            </StackPanel>
+        </Button>
         <Button x:Name="Statistics" Content="Statistics" Click="Statistics_Click" Grid.Column="2"/>
     </Grid>
 </Page>

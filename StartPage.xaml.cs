@@ -24,6 +24,7 @@ namespace BrickBreaker
         public StartPage()
         {
             InitializeComponent();
+            levelLabel.Text = "Level " + (LevelLoader.SelectedLevel +1);
         }
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {
@@ -37,7 +38,7 @@ namespace BrickBreaker
 
         private void LevelSelector_Click(object sender, RoutedEventArgs e)
         {
-
+            NavigationService.Navigate(new LevelSelectorPage());
         }
     }
 }

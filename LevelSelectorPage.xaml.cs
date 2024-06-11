@@ -1,15 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
 
 namespace BrickBreaker
@@ -17,11 +8,59 @@ namespace BrickBreaker
     /// <summary>
     /// Interaction logic for LevelSelectorPage.xaml
     /// </summary>
-    public partial class LevelSelectorPage : Window
+    public partial class LevelSelectorPage : Page
     {
         public LevelSelectorPage()
         {
             InitializeComponent();
+            LoadLevels();
+        }
+
+        private void LoadLevels()
+        {
+            int height = 50;
+            int width = 100;
+            int maxLevelCount = 6;
+            int col = 0;
+            int row = 0;
+
+            for (int i = 0; i < LevelLoader.Levels.Count(); i++)
+            {
+                Button levelButton = new()
+                {
+                    Height = height,
+                    Width = width,
+                    Content = "Level " + (i + 1),
+                    Margin = new Thickness(5),
+                    HorizontalAlignment = HorizontalAlignment.Center,
+                    VerticalAlignment = VerticalAlignment.Center
+                };
+
+                Canvas.SetTop(levelButton, (height + 10) * row + 100);
+                Canvas.SetLeft(levelButton, (width + 10) * col + 50);
+
+                grid.Children.Add(levelButton);
+
+                levelButton.Click += (sender, e) =>
+                {
+                    LevelLoader.SelectedLevel = i -1;
+                    NavigationService?.GoBack();
+                };
+
+                col++;
+                if (col >= maxLevelCount)
+                {
+                    col = 0;
+                    row++;
+                }
+            }
+        }
+
+
+
+        private void Button_Click(object sender, System.Windows.RoutedEventArgs e)
+        {
+            NavigationService?.GoBack();
         }
     }
 }
