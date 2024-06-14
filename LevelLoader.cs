@@ -11,7 +11,7 @@ namespace BrickBreaker
 {
     internal static class LevelLoader
     {
-        private static string FilePath { get => "levelData.json"; }
+        private static string FilePath { get => @"..\..\..\levelData.json"; }
         private static List<Brick[,]> Levels { get; set; } = [];
         public static int SelectedLevel { get; set; } = 0;
         public static int LevelCount { get => Levels.Count; }
@@ -55,7 +55,6 @@ namespace BrickBreaker
                         }
                     }
                 }
-
             }
             catch (Exception ex)
             {

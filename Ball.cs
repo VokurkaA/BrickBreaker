@@ -84,20 +84,23 @@ namespace BrickBreaker
             if (Position.Y + Diameter < paddle.Position.Y)
                 return Direction.None;
 
-            Vector2D distance = new(
-                Math.Abs(Position.X + Radius - (paddle.Position.X + paddle.Size.X / 2)),
-                Math.Abs(Position.Y + Radius - (paddle.Position.Y + paddle.Size.Y / 2))
-            );
+            Vector2D circCenter = new(Position.X + Radius, Position.Y + Radius);
 
-            if (distance.X <= (paddle.Size.X / 2 + Radius) && distance.Y <= (paddle.Size.Y / 2 + Radius))
-            {
-                if (Position.Y + Radius < paddle.Position.Y)
-                    return Direction.Top;
-                if (Position.X + Radius < paddle.Position.X)
-                    return Direction.Left;
-                if (Position.X > paddle.Position.X + paddle.Size.X)
-                    return Direction.Right;
-            }
+            Vector2D test = new(circCenter.X, circCenter.Y);
+
+            if (circCenter.X < paddle.Position.X)
+                test.X = paddle.Position.X;
+            else if (circCenter.X > paddle.Position.X + paddle.Size.X)
+                test.X = paddle.Position.X + paddle.Size.X;
+            if (circCenter.Y < paddle.Position.Y)
+                test.Y = paddle.Position.Y;
+            else if (circCenter.Y > paddle.Position.Y + paddle.Size.Y)
+                test.Y = paddle.Position.Y + paddle.Size.Y;
+
+            Vector2D dist = new(circCenter.X - test.X, circCenter.Y - test.Y);
+            double d = (Math.Sqrt(dist.X * dist.X) + (dist.Y * dist.Y));
+            if (d <= Radius)
+                return Direction.Top;
             return Direction.None;
         }
 
