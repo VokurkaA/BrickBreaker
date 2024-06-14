@@ -45,6 +45,7 @@ namespace BrickBreaker
                 levelButton.Click += (sender, e) =>
                 {
                     LevelLoader.SelectedLevel = levelIndex;
+                    StartPage.Update();
                     NavigationService?.GoBack();
                 };
 

@@ -6,6 +6,8 @@ using System.Numerics;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Media;
 using System.Windows.Media.Media3D;
 using System.Windows.Shapes;
@@ -36,17 +38,17 @@ namespace BrickBreaker
         public Vector2D Position { get; private set; }
         public Vector2D Velocity { get; private set; }
         public Ellipse ellipse { get; }
-        public (bool, Brick?) Move(double deltaTime, Brick[] edgeBricks, Paddle paddle)
+        public (bool, Brick?) Move(double deltaTime, Brick[] edgeBricks, Paddle paddle, Canvas gameCanvas, List<Upgrade> upgrades, double currentTime, List<Ball> balls)
         {
             Position += (Velocity * deltaTime).Normalize() * 1.5;
 
             if (Position.Y > GamePage.CanvasHeight - Diameter)
                 Dispose();
 
-            return (IsAlive, CheckForCollisions(edgeBricks, paddle));
+            return (IsAlive, CheckForCollisions(edgeBricks, paddle, gameCanvas, upgrades, currentTime, balls));
         }
 
-        private Brick? CheckForCollisions(Brick[] edgeBricks, Paddle paddle)
+        private Brick? CheckForCollisions(Brick[] edgeBricks, Paddle paddle, Canvas gameCanvas, List<Upgrade> upgrades, double currentTime, List<Ball> balls)
         {
             Direction reflectionDirection = BallHitsPaddle(paddle);
             if (reflectionDirection != Direction.None)
@@ -58,7 +60,7 @@ namespace BrickBreaker
                 if (reflectionDirection != Direction.None)
                 {
                     Velocity = Velocity.Reflect(reflectionDirection);
-                    if (brick.Hit())
+                    if (brick.Hit(gameCanvas, upgrades, currentTime, paddle, balls))
                         return brick;
                     return null;
                 }
@@ -77,7 +79,6 @@ namespace BrickBreaker
             IsAlive = false;
             GC.SuppressFinalize(this);
         }
-
         private Direction BallHitsPaddle(Paddle paddle)
         {
             if (Position.Y + Diameter < paddle.Position.Y)

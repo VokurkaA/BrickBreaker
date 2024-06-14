@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Reflection.Metadata;
+using System.Security.Policy;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -14,19 +17,33 @@ namespace BrickBreaker
     internal abstract class Upgrade : IComparable
     {
         private static readonly Random Rnd = new();
-        public Ellipse ellipse { get; }
-        public Double ExecutionTime { get; }
-        private static int Diameter { get => 15; }
-        public Upgrade(double executionTime)
+        public static int Diameter { get => 20; }
+        private static int BaseSpeed { get => 15; }
+        public Ellipse ellipse { get; private set; }
+        internal Vector2D Position { get; private set; }
+        public double ExecutionTime { get; internal set; }
+        public Upgrade(double currentTime, Vector2D position)
         {
-            ExecutionTime = executionTime;
-            ellipse = new Ellipse
+            ExecutionTime = currentTime;
+            Position = position;
+            Game.UiDispatcher.Invoke(() =>
             {
-                Height = Diameter,
-                Width = Diameter,
-                Fill = Brushes.Gray,
-                Opacity = 0.5
-            };
+                ellipse = new Ellipse
+                {
+                    Height = Diameter,
+                    Width = Diameter,
+                    Fill = Brushes.Gray,
+                    Opacity = 0.5
+                };
+            });
+        }
+        public bool Move(double deltaTime)
+        {
+            Position.Y += (BaseSpeed * deltaTime) * 2;
+            Game.UiDispatcher.Invoke(() => { Canvas.SetTop(ellipse, Position.Y); });
+            if (Position.Y <= 0)
+                return false;
+            return true;
         }
         public abstract void Execute();
         public int CompareTo(object? obj)
@@ -37,25 +54,31 @@ namespace BrickBreaker
                 return ExecutionTime.CompareTo(otherUpgrade.ExecutionTime);
             throw new ArgumentException("Object is not an of type \"Upgrade\"");
         }
-        public static void New(double currentTime, Paddle paddle, List<Ball> balls, Canvas gameCanvas)
+        public static bool New(Vector2D position, Canvas gameCanvas, List<Upgrade> upgrades, double currentTime, Paddle paddle, List<Ball> balls)
         {
+            if (Rnd.NextDouble() > 0.05)
+                return false;
+
             double probability = Rnd.NextDouble();
-            if (probability > 0.1)
-                return;
+            Upgrade upgrade;
+            upgrade = new EnlargePlatform(position, currentTime, paddle);
+            if (probability > 0.75)
+                upgrade = new AddThreeBalls(position, paddle, balls, gameCanvas);
+            else if (probability > 0.5)
+                upgrade = new MultiplyBalls(position, balls, gameCanvas);
+            else if (probability > 0.25)
+                upgrade = new EnlargePlatform(position, currentTime, paddle);
+            else
+                upgrade = new DoubleDemage(position, currentTime);
 
-            Statistics.UpgradesCollected++;
-
-            if (probability > 0.075)
-                Game.UpgradeQueue.Enqueue(new AddThreeBalls(currentTime, paddle, balls, gameCanvas));
-            if (probability > 0.05)
-                Game.UpgradeQueue.Enqueue(new MultiplyBalls(currentTime, balls, gameCanvas));
-            if (probability > 0.025)
+            Game.UiDispatcher.Invoke(() =>
             {
-                Game.UpgradeQueue.Enqueue(new EnlargePlatform(currentTime, paddle));
-                Game.UpgradeQueue.Enqueue(new ShrinkPlatform(currentTime + 10, paddle));
-            }
-            Game.UpgradeQueue.Enqueue(new DoubleDemage(currentTime));
-            Game.UpgradeQueue.Enqueue(new ResetDemage(currentTime));
+                Canvas.SetTop(upgrade.ellipse, position.Y);
+                Canvas.SetLeft(upgrade.ellipse, position.X);
+                gameCanvas.Children.Add(upgrade.ellipse);
+            });
+            upgrades.Add(upgrade);
+            return true;
         }
     }
     internal class AddThreeBalls : Upgrade
@@ -63,7 +86,7 @@ namespace BrickBreaker
         private Paddle paddle { get; }
         private List<Ball> Balls { get; set; }
         private Canvas GameCanvas { get; }
-        public AddThreeBalls(double currentTime, Paddle paddle, List<Ball> balls, Canvas gameCanvas) : base(currentTime)
+        public AddThreeBalls(Vector2D position, Paddle paddle, List<Ball> balls, Canvas gameCanvas) : base(0, position)
         {
             this.paddle = paddle;
             Balls = balls;
@@ -71,27 +94,26 @@ namespace BrickBreaker
         }
         public override void Execute()
         {
-            double angleInRadians = Math.PI / 4;
             Vector2D start = new(
                 paddle.Position.X + paddle.Size.X / 2,
-                paddle.Position.Y + paddle.Size.Y
+                paddle.Position.Y - (Ball.Diameter + paddle.Size.Y)
             );
 
             Game.UiDispatcher.Invoke(() =>
             {
-                Ball ball1 = new(new Vector2D(start.X, start.Y), new Vector2D(Math.Cos(angleInRadians), -Math.Sin(angleInRadians)));
+                Ball ball1 = new(new Vector2D(start.X, start.Y), new Vector2D(0, -1));
                 Balls.Add(ball1);
                 Canvas.SetTop(ball1.ellipse, start.Y);
                 Canvas.SetLeft(ball1.ellipse, start.X);
                 GameCanvas.Children.Add(ball1.ellipse);
 
-                Ball ball2 = new(new Vector2D(start.X, start.Y), new Vector2D(0, -1));
+                Ball ball2 = new(new Vector2D(start.X, start.Y), new Vector2D(0.5, -1));
                 Balls.Add(ball2);
                 Canvas.SetTop(ball2.ellipse, start.Y);
                 Canvas.SetLeft(ball2.ellipse, start.X);
                 GameCanvas.Children.Add(ball2.ellipse);
 
-                Ball ball3 = new(new Vector2D(start.X, start.Y), new Vector2D(Math.Cos(-angleInRadians), -Math.Sin(-angleInRadians)));
+                Ball ball3 = new(new Vector2D(start.X, start.Y), new Vector2D(-0.5, -1));
                 Balls.Add(ball3);
                 Canvas.SetTop(ball3.ellipse, start.Y);
                 Canvas.SetLeft(ball3.ellipse, start.X);
@@ -104,7 +126,7 @@ namespace BrickBreaker
         private Ball[] BallsCopy { get; }
         private Canvas GameCanvas { get; }
         private List<Ball> Balls { get; set; }
-        public MultiplyBalls(double currentTime, List<Ball> balls, Canvas gameCanvas) : base(currentTime)
+        public MultiplyBalls(Vector2D position, List<Ball> balls, Canvas gameCanvas) : base(0, position)
         {
             GameCanvas = gameCanvas;
             Balls = balls;
@@ -145,27 +167,34 @@ namespace BrickBreaker
     internal class EnlargePlatform : Upgrade
     {
         private Paddle paddle { get; }
-        public EnlargePlatform(double executionTime, Paddle paddle) : base(executionTime)
+        public EnlargePlatform(Vector2D position, double currentTime, Paddle paddle) : base(currentTime, position)
         {
             this.paddle = paddle;
         }
-
+        
         public override void Execute()
         {
-            if (paddle.Position.X - paddle.Size.X > 0)
-            {
-                if (paddle.Position.X + paddle.Size.X * 2 > GamePage.CanvasWidth)
-                    paddle.Position.X = GamePage.CanvasWidth - paddle.Size.X * 2;
-                else
-                    paddle.Position.X -= paddle.Size.X;
-            }
+            int index = Game.UpgradeQueue.ToList().FindIndex(item => item is ShrinkPlatform);
+            if (index == -1)
+                Game.UpgradeQueue.Enqueue(new ShrinkPlatform(Position, ExecutionTime + 25, paddle));
             else
-                paddle.Position.X = 0;
-
+            {
+                Upgrade[] upgradeArray = Game.UpgradeQueue.ToArray();
+                upgradeArray[index].ExecutionTime += 10;
+                Game.UpgradeQueue = new Queue<Upgrade>(upgradeArray);
+                return;
+            }
+            paddle.Position.X -= paddle.Size.X / 2;
             paddle.Size.X *= 2;
+            if (paddle.Position.X < 0)
+                paddle.Position.X = 0;
+            else if (paddle.Position.X + paddle.Size.X > GamePage.CanvasWidth)
+                paddle.Position.X = GamePage.CanvasWidth - paddle.Size.X;
+
             Game.UiDispatcher.Invoke(() =>
             {
                 Canvas.SetLeft(paddle.rectangle, paddle.Position.X);
+                paddle.rectangle.Width = paddle.Size.X;
             });
         }
     }
@@ -173,7 +202,7 @@ namespace BrickBreaker
     {
         private Paddle paddle { get; }
 
-        public ShrinkPlatform(double executionTime, Paddle paddle) : base(executionTime)
+        public ShrinkPlatform(Vector2D position, double executionTime, Paddle paddle) : base(executionTime, position)
         {
             this.paddle = paddle;
         }
@@ -185,22 +214,32 @@ namespace BrickBreaker
             Game.UiDispatcher.Invoke(() =>
             {
                 Canvas.SetLeft(paddle.rectangle, paddle.Position.X);
+                paddle.rectangle.Width = paddle.Size.X;
             });
         }
     }
     internal class DoubleDemage : Upgrade
     {
-        public DoubleDemage(double executionTime) : base(executionTime)
+        public DoubleDemage(Vector2D position, double currentTime) : base(currentTime, position)
         {
         }
         public override void Execute()
         {
+            int index = Game.UpgradeQueue.ToList().FindIndex(item => item is ResetDemage);
+            if (index == -1)
+                Game.UpgradeQueue.Enqueue(new ResetDemage(Position, ExecutionTime + 25));
+            else
+            {
+                Upgrade[] upgradeArray = Game.UpgradeQueue.ToArray();
+                upgradeArray[index].ExecutionTime += 10;
+                Game.UpgradeQueue = new Queue<Upgrade>(upgradeArray);
+            }
             Ball.DemageMultiplier *= 2;
         }
     }
     internal class ResetDemage : Upgrade
     {
-        public ResetDemage(double executionTime) : base(executionTime)
+        public ResetDemage(Vector2D position, double executionTime) : base(executionTime, position)
         {
         }
         public override void Execute()

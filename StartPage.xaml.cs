@@ -12,7 +12,6 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.Xml.XPath;
 
 namespace BrickBreaker
 {
@@ -21,10 +20,16 @@ namespace BrickBreaker
     /// </summary>
     public partial class StartPage : Page
     {
+        private static TextBlock textBlock { get; set; } = new();
         public StartPage()
         {
             InitializeComponent();
-            levelLabel.Text = "Level " + (LevelLoader.SelectedLevel +1);
+            textBlock = levelLabel;
+            Update();
+        }
+        public static void Update()
+        {
+            textBlock.Text = "Level " + (LevelLoader.SelectedLevel + 1);
         }
         private void StartGame_Click(object sender, RoutedEventArgs e)
         {

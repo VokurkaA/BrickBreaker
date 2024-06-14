@@ -12,7 +12,7 @@ namespace BrickBreaker
 {
     internal class Brick
     {
-        private readonly string[] colorStops = ["#000000", "#00FF00", "#20DF00", "#40BF00", "#609F00", "#808000", "#9F6000", "#BF4000", "#DF2000", "#FF0000"];
+        private readonly string[] colorStops = ["#000000", "#00FF00", "#20DF00", "#40BF00", "#609F00", "#808000", "#9F6000", "#BF4000", "#DF2000", "#FF0000", "#222222"];
         public Rectangle rectangle { get; }
         private int Hp { get; set; }
         public static int Height { get => 20; }
@@ -58,23 +58,25 @@ namespace BrickBreaker
         /// Damages the brick.
         /// </summary>
         /// <returns>Returns true if brick breaks, else false</returns>
-        public virtual bool Hit()
+        public virtual bool Hit(Canvas gameCanvas, List<Upgrade> upgrades, double currentTime, Paddle paddle, List<Ball> balls)
         {
             Hp -= Ball.Demage;
             if (Hp <= 0)
             {
-                //Upgrade.New();
+                Upgrade.New(new Vector2D(Left + Width / 2 - Ball.Diameter / 2, Top + Height / 2), gameCanvas, upgrades, currentTime, paddle, balls);
                 Statistics.BrickDestroyed++;
+                Game.DestroyableBricksCount--;
                 return true;
             }
+            Game.UiDispatcher.Invoke(() => rectangle.Fill = new BrushConverter().ConvertFrom(colorStops[Hp]) as SolidColorBrush ?? Brushes.Red);
             return false;
         }
     }
 
     internal class UndestroyableBrick : Brick
     {
-        public UndestroyableBrick(Vector2D position) : base(0, position) { }
+        public UndestroyableBrick(Vector2D position) : base(10, position) { }
 
-        public override bool Hit() => false;
+        public override bool Hit(Canvas gameCanvas, List<Upgrade> upgrades, double currentTime, Paddle paddle, List<Ball> balls) => false;
     }
 }
